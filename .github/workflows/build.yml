@@ -1,0 +1,43 @@
+
+name: Build TouchShift APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'TouchShift_CloudBuild.zip'
+      - '.github/workflows/build.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Unpack project
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip
+          unzip -o TouchShift_CloudBuild.zip -d unpacked
+          cp -a unpacked/app .
+          cp unpacked/build.gradle.kts unpacked/gradle.properties unpacked/settings.gradle.kts .
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build APK
+        run: gradle assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TouchShift-APK
+          path: app/build/outputs/apk/debug/*.apk
+          
